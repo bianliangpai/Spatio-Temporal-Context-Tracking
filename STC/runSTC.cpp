@@ -61,7 +61,7 @@ int main()
 		cv::waitKey(10);
 	}
 
-	tracker.init(selection, tframe);
+	tracker.init(selection, frame);
 	while (true)
 	{
 		video >> frame;
@@ -71,7 +71,7 @@ int main()
 		double t = (double)cv::getTickCount();
 		cv::Rect result = tracker.update(frame);
 		t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-		std::cout << "Time cost: " << t << " ms." << std::endl;
+		std::cout << "Time cost: " << t*1000 << " ms." << std::endl;
 
 		cv::rectangle(frame, result, cv::Scalar(0, 0, 255), thickness, lineType, 0);
 		cv::imshow("video", frame);

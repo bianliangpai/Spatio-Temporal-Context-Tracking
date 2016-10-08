@@ -26,8 +26,11 @@ public:
 		targetsz = cv::Size(0, 0);
 	}
 
-	void init(cv::Rect selection, cv::Mat & frame)
+	void init(cv::Rect selection, cv::Mat frame)
 	{
+		if (frame.channels() == 3)
+			cv::cvtColor(frame, frame, CV_RGB2GRAY);
+
 		numFrame++;
 		
 		// initialization
@@ -71,8 +74,11 @@ public:
 		Hstcf = hscf;
 	}
 
-	cv::Rect update(cv::Mat & frame)
+	cv::Rect update(cv::Mat frame)
 	{
+		if (frame.channels() == 3)
+			cv::cvtColor(frame, frame, CV_RGB2GRAY);
+
 		numFrame++;
 		
 		// update scale in Eq.(15)
@@ -108,8 +114,8 @@ public:
 			float curScale = 0;
 			for (int k = 0; k < num; k++)
 			{
-				int tIdx_1 = (numFrame - k < 0 ? numFrame + num - k : numFrame - k);
-				int tIdx_2 = (numFrame - k - 1 < 0 ? numFrame + num - k - 1 : numFrame - k - 1);
+				int tIdx_1 = ((numFrame - 1) - k < 0 ? (numFrame - 1) + num - k : (numFrame - 1) - k);
+				int tIdx_2 = ((numFrame - 1) - k - 1 < 0 ? (numFrame - 1) + num - k - 1 : (numFrame - 1) - k - 1);
 				curScale += std::sqrt(maxconf[tIdx_1] / maxconf[tIdx_2]);
 			}
 			// update
@@ -128,27 +134,27 @@ public:
 
 private:
 
-	cv::Mat getContext(cv::Mat frame, cv::Point2i nPos, cv::Size sz, cv::Mat window)
+	cv::Mat getContext(cv::Mat & frame, cv::Point2i nPos, cv::Size sz, cv::Mat window)
 	{
 		#define MAX(a, b) (a) > (b) ? (a) : (b)
 		#define MIN(a, b) (a) < (b) ? (a) : (b)
 		
-		cv::Mat out(sz, CV_8UC3);
+		cv::Mat out(sz, CV_8U);
 		for (int i = 0; i < sz.height; i++)
 		{
-			int numFrameCurRow = MAX(0, MIN(frame.rows, nPos.y - sz.height / 2 + i));
+			int numFrameCurRow = MAX(0, MIN(frame.rows-1, nPos.y - sz.height / 2 + i));
 			
 			uchar* out_ptr = out.ptr<uchar>(i);
 			uchar* frame_ptr = frame.ptr<uchar>(numFrameCurRow);
 
 			for (int j = 0; j < sz.width; j++)
 			{
-				int numFrameCurCol = MAX(0, MIN(frame.cols, nPos.x - sz.width / 2 + j));
+				int numFrameCurCol = MAX(0, MIN(frame.cols-1, nPos.x - sz.width / 2 + j));
 
-				memcpy(&out_ptr[3*j], &frame_ptr[3*numFrameCurCol], sizeof(uchar)*3);
+				memcpy(&out_ptr[j], &frame_ptr[numFrameCurCol], sizeof(uchar));
 			}
 		}
-		out.convertTo(out, CV_32FC3);
+		out.convertTo(out, CV_32F);
 		out -= cv::mean(out);
 		out.mul(window);
 
