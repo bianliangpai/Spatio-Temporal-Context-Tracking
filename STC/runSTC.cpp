@@ -34,7 +34,7 @@ void onMouse(int event, int x, int y, int, void*)
 
 int main()
 {
-	STC tracker;
+	STCTracker tracker;
 	
 	cv::VideoCapture video("bike.avi");
 	cv::namedWindow("video", cv::WINDOW_AUTOSIZE);
@@ -68,10 +68,10 @@ int main()
 		if (frame.empty())
 			break;
 
-		double t = (double)cv::getTickCount();
+		int64 tick = cv::getTickCount();
 		cv::Rect result = tracker.update(frame);
-		t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-		std::cout << "Time cost: " << t*1000 << " ms." << std::endl;
+		double time = ( static_cast<double>(cv::getTickCount() - tick) / cv::getTickFrequency() );
+		std::cout << "Time cost: " << time*1000 << " ms." << std::endl;
 
 		cv::rectangle(frame, result, cv::Scalar(0, 0, 255), thickness, lineType, 0);
 		cv::imshow("video", frame);
